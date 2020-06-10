@@ -1,10 +1,12 @@
 use crate::fetching::{send_future, send_request, FetchError, FetchState};
+use crate::routing::AppRoute;
 use serde_derive::{Deserialize, Serialize};
 use validator::Validate;
 use wasm_bindgen::prelude::JsValue;
 use yew::prelude::{html, Component, ComponentLink, InputData, ShouldRender};
 use yew::services::ConsoleService;
 use yew::virtual_dom::VNode;
+use yew_router::prelude::RouterAnchor;
 
 #[derive(Clone)]
 pub struct Model {
@@ -107,6 +109,8 @@ impl Component for Model {
                            Msg::UpdateForm(e.value, FormField::Password)
                        )/>
                 <button onclick=self.link.callback(|_| Msg::Login)>{ "LogIn" }</button>
+
+                <RouterAnchor<AppRoute> route=AppRoute::Index> {"Home"} </RouterAnchor<AppRoute>>
             </div>
         }
     }

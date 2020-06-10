@@ -6,14 +6,16 @@ extern crate validator;
 
 mod fetching;
 mod login;
+mod routing;
 
+use login::Model as Login;
+use routing::AppRoute;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 use yew::prelude::*;
 use yew::virtual_dom::VNode;
 use yew_router::switch::Permissive;
-use yew_router::{prelude::Router, prelude::RouterAnchor, route::Route, Switch};
-use login::Model as Login;
+use yew_router::{prelude::Router, prelude::RouterAnchor, route::Route};
 
 #[derive(Serialize, Deserialize)]
 pub struct CurrentUser {
@@ -21,17 +23,7 @@ pub struct CurrentUser {
     email: String,
 }
 
-#[derive(Switch, Debug, Clone)]
-pub enum AppRoute {
-    #[to = "/login"]
-    Login,
-    #[to = "/"]
-    Index,
-    #[to = "/page-not-found"]
-    PageNotFound(Permissive<String>),
-}
-
-pub struct Model { }
+pub struct Model {}
 
 pub enum Msg {
     RouteChanged(Route<()>),
@@ -57,15 +49,18 @@ impl Component for Model {
     fn view(&self) -> VNode {
         html! {
             <div>
-                <nav class="menu",>
-                    <RouterAnchor<AppRoute> route=AppRoute::Login> {"Login"} </RouterAnchor<AppRoute>>
-                </nav>
-                <div>
                 <Router <AppRoute>
                   render = Router::render(|switch: AppRoute| {
                       match switch {
                         AppRoute::Login => html!{ <Login />},
-                        AppRoute::Index => VNode::from("My Store"),
+                        AppRoute::Index => html!{
+                            <div>
+                                <nav class="menu",>
+                                    <RouterAnchor<AppRoute> route=AppRoute::Login> {"Login"} </RouterAnchor<AppRoute>>
+                                </nav>
+                                <h1>{ "My Store" }</h1>
+                            </div>
+                        },
                         AppRoute::PageNotFound(Permissive(None)) => html!{"Page not found"},
                         AppRoute::PageNotFound(Permissive(Some(missed_route))) => html!{format!("Page '{}' not found", missed_route)}
                       }
@@ -74,7 +69,6 @@ impl Component for Model {
                       AppRoute::PageNotFound(Permissive(Some(route.route)))
                   })
                 />
-                </div>
             </div>
         }
     }
