@@ -7,8 +7,10 @@ extern crate validator;
 mod fetching;
 mod login;
 mod routing;
+mod register;
 
 use login::Model as Login;
+use register::Model as Register;
 use routing::AppRoute;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
@@ -48,15 +50,19 @@ impl Component for Model {
 
     fn view(&self) -> VNode {
         html! {
-            <div>
+            <div class="container">
                 <Router <AppRoute>
                   render = Router::render(|switch: AppRoute| {
                       match switch {
                         AppRoute::Login => html!{ <Login />},
+                        AppRoute::Register => html!{ <Register /> },
                         AppRoute::Index => html!{
                             <div>
                                 <nav class="menu",>
                                     <RouterAnchor<AppRoute> route=AppRoute::Login> {"Login"} </RouterAnchor<AppRoute>>
+                                </nav>
+                                <nav class="menu",>
+                                    <RouterAnchor<AppRoute> route=AppRoute::Register> {"Sign Up"} </RouterAnchor<AppRoute>>
                                 </nav>
                                 <h1>{ "My Store" }</h1>
                             </div>

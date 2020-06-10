@@ -11,27 +11,31 @@ use yew_router::prelude::RouterAnchor;
 #[derive(Clone)]
 pub struct Model {
     link: ComponentLink<Self>,
-    login_user: LoginUser,
+    register_user: RegisterUser,
 }
 
 #[derive(Serialize, Validate, Deserialize, Clone)]
-pub struct LoginUser {
+pub struct RegisterUser {
     #[validate(email)]
     #[validate(length(min = 1))]
     email: String,
+    company: String,
     #[validate(length(min = 8))]
     password: String,
+    #[validate(length(min = 8))]
+    password_confirmation: String,
 }
 
 pub enum FormField {
     Email,
+    Company,
     Password,
+    PasswordConfirmation
 }
 
 pub enum Msg {
-    Login,
-    Logout,
-    Logged(FetchState<JsValue>),
+    Register,
+    Registered(FetchState<JsValue>),
     UpdateForm(String, FormField),
 }
 
@@ -42,38 +46,39 @@ impl Component for Model {
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         Self {
             link,
-            login_user: LoginUser {
+            register_user: RegisterUser {
                 email: "".to_string(),
+                company: "".to_string(),
                 password: "".to_string(),
+                password_confirmation: "".to_string(),
             },
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let login_user = self.login_user.clone();
+        let register_user = self.register_user.clone();
         match msg {
-            Msg::Login => {
+            Msg::Register => {
                 let future = async move {
-                    match login_user.validate() {
+                    match register_user.validate() {
                         Ok(_) => {
-                            match send_request("http://localhost:8088/login", &login_user, "POST")
+                            match send_request("http://localhost:8088/register", &register_user, "POST")
                                 .await
                             {
-                                Ok(user) => Msg::Logged(FetchState::Success(user)),
-                                Err(error) => Msg::Logged(FetchState::Failed(error)),
+                                Ok(user) => Msg::Registered(FetchState::Success(user)),
+                                Err(error) => Msg::Registered(FetchState::Failed(error)),
                             }
                         }
-                        Err(error) => Msg::Logged(FetchState::Failed(FetchError {
+                        Err(error) => Msg::Registered(FetchState::Failed(FetchError {
                             err: JsValue::from(error.to_string()),
                         })),
                     }
                 };
                 send_future(self.link.clone(), future);
-                self.link.send_message(Msg::Logged(FetchState::Fetching));
+                self.link.send_message(Msg::Registered(FetchState::Fetching));
                 true
             }
-            Msg::Logout => false,
-            Msg::Logged(fetch_state) => {
+            Msg::Registered(fetch_state) => {
                 match fetch_state {
                     FetchState::Success(_) => ConsoleService::new().log("success"),
                     FetchState::Failed(error) => ConsoleService::new().log(&error.to_string()),
@@ -83,8 +88,10 @@ impl Component for Model {
             }
             Msg::UpdateForm(value, form_field) => {
                 match form_field {
-                    FormField::Email => self.login_user.email = value,
-                    FormField::Password => self.login_user.password = value,
+                    FormField::Email => self.register_user.email = value,
+                    FormField::Company => self.register_user.company = value,
+                    FormField::Password => self.register_user.password = value,
+                    FormField::PasswordConfirmation => self.register_user.password_confirmation = value,
                 };
                 true
             }
@@ -98,26 +105,45 @@ impl Component for Model {
     fn view(&self) -> VNode {
         html! {
             <form class="col-lg-6 text-center border mx-auto p-5">
-                <p class="h4 mb-4"> { "LogIn" }</p>
-
+                <p class="h4 mb-4"> { "Sign Up" }</p>
                 <div class="form-row mb-4">
                     <input name="email"
                         type="text"
+                        placeholder="email"
                         class="form-control"
                         oninput=self.link.callback(|e: InputData|
                             Msg::UpdateForm(e.value, FormField::Email)
                         )/>
                 </div>
                 <div class="form-row mb-4">
-                <input name="password"
-                       type="password"
-                       class="form-control"
-                       oninput=self.link.callback(|e: InputData|
-                           Msg::UpdateForm(e.value, FormField::Password)
-                       )/>
+                    <input name="company"
+                        type="text"
+                        placeholder="company"
+                        class="form-control"
+                        oninput=self.link.callback(|e: InputData|
+                            Msg::UpdateForm(e.value, FormField::Company)
+                        )/>
                 </div>
-                <button onclick=self.link.callback(|_| Msg::Login)
-                        class="btn btn-info my-4 btn-block">{ "LogIn" }</button>
+                <div class="form-row mb-4">
+                    <input name="password"
+                        type="password"
+                        placeholder="password"
+                        class="form-control"
+                        oninput=self.link.callback(|e: InputData|
+                            Msg::UpdateForm(e.value, FormField::Password)
+                        )/>
+                </div>
+                <div class="form-row mb-4">
+                    <input name="password_confirmation"
+                        type="password"
+                        placeholder="password confirmation"
+                        class="form-control"
+                        oninput=self.link.callback(|e: InputData|
+                            Msg::UpdateForm(e.value, FormField::PasswordConfirmation)
+                        )/>
+                </div>
+                <button onclick=self.link.callback(|_| Msg::Register)
+                        class="btn btn-info my-4 btn-block">{ "Sign Up" }</button>
 
                 <hr />
                 <RouterAnchor<AppRoute> route=AppRoute::Index> {"Home"} </RouterAnchor<AppRoute>>
@@ -125,3 +151,4 @@ impl Component for Model {
         }
     }
 }
+
