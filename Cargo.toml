@@ -1,0 +1,33 @@
+[package]
+name = "yew-mystore"
+version = "0.1.0"
+authors = ["werner <werner_a_e@yahoo.es>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+yew = "0.16"
+yew-router = { version = "0.13.0", features = ["web_sys"] }
+serde = "1"
+serde_json = "1"
+serde_derive = "1"
+wasm-bindgen-futures = "0.4.3"
+validator = "0.10"
+validator_derive = "0.10"
+
+[dependencies.web-sys]
+version = "0.3.35"
+features = [
+  'Headers',
+  'Request',
+  'RequestInit',
+  'RequestMode',
+  'Response',
+  'Window',
+]
+
+[dependencies.wasm-bindgen]
+version = "^0.2"
+features = ["serde-serialize"]

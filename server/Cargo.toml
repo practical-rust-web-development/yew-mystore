@@ -1,0 +1,11 @@
+[package]
+name = "server"
+version = "0.1.0"
+authors = ["tarkah <admin@tarkah.dev>"]
+edition = "2018"
+
+[dependencies]
+actix-web = "2.0.0"
+actix-files = "0.2.1"
+actix-rt = "1.1.0"
+env_logger = "0.7.1"
