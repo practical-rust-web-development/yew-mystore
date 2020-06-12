@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::fmt::{Error, Formatter};
 use std::future::Future;
 use wasm_bindgen::prelude::JsValue;
@@ -41,9 +41,14 @@ where
     });
 }
 
-pub async fn send_request<T>(url: &str, data: &T, method: &str) -> Result<JsValue, FetchError>
+pub async fn send_request<'a, T, R>(
+    url: &'a str,
+    data: &T,
+    method: &str,
+) -> Result<JsValue, FetchError>
 where
     T: Serialize,
+    R: Serialize + for<'b> Deserialize<'b>,
 {
     let mut opts = RequestInit::new();
     opts.method(method);
@@ -52,7 +57,9 @@ where
         opts.body(Some(&JsValue::from_str(&data_str)));
     }
 
-    let request = Request::new_with_str_and_init(url, &opts)?;
+    let base_url = "http://localhost:8088";
+
+    let request = Request::new_with_str_and_init(&format!("{}{}", base_url, url), &opts)?;
 
     request.headers().set("Content-Type", "application/json")?;
 
@@ -62,5 +69,11 @@ where
     let resp_value = JsFuture::from(window.fetch_with_request(&request)).await?;
     let resp: Response = resp_value.dyn_into()?;
 
-    Ok(JsFuture::from(resp.json()?).await?)
+    let json = JsFuture::from(resp.json()?).await?;
+    match json.into_serde::<R>() {
+        Ok(value) => JsValue::from_serde(&value).map_err(|error| FetchError {
+            err: JsValue::from_str(&error.to_string()),
+        }),
+        Err(error) => Err(FetchError { err: JsValue::from(error.to_string()) }),
+    }
 }

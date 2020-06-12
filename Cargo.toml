@@ -25,7 +25,7 @@ features = [
   'RequestInit',
   'RequestMode',
   'Response',
-  'Window',
+  'Window'
 ]
 
 [dependencies.wasm-bindgen]

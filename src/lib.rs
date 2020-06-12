@@ -21,8 +21,10 @@ use yew_router::{prelude::Router, prelude::RouterAnchor, route::Route};
 
 #[derive(Serialize, Deserialize)]
 pub struct CurrentUser {
-    id: String,
+    id: i32,
     email: String,
+    company: String,
+    created_at: String
 }
 
 pub struct Model {}

@@ -1,14 +1,14 @@
 use crate::fetching::{send_future, send_request, FetchError, FetchState};
 use crate::routing::AppRoute;
+use crate::CurrentUser;
 use serde_derive::{Deserialize, Serialize};
 use validator::Validate;
 use wasm_bindgen::prelude::JsValue;
+use yew::agent::{Bridge, Bridged};
 use yew::prelude::{html, Component, ComponentLink, InputData, ShouldRender};
 use yew::services::ConsoleService;
 use yew::virtual_dom::VNode;
-use yew_router::{prelude::*, route::Route, agent::RouteAgent, agent::RouteRequest};
-use yew::agent::Bridged;
-use yew::agent::Bridge;
+use yew_router::{agent::RouteAgent, agent::RouteRequest, prelude::RouterAnchor, route::Route};
 
 pub struct Model {
     link: ComponentLink<Self>,
@@ -32,14 +32,14 @@ pub enum FormField {
     Email,
     Company,
     Password,
-    PasswordConfirmation
+    PasswordConfirmation,
 }
 
 pub enum Msg {
     Register,
     Registered(FetchState<JsValue>),
     UpdateForm(String, FormField),
-    NoOp
+    NoOp,
 }
 
 impl Component for Model {
@@ -58,7 +58,7 @@ impl Component for Model {
                 password: "".to_string(),
                 password_confirmation: "".to_string(),
             },
-            router
+            router,
         }
     }
 
@@ -68,14 +68,10 @@ impl Component for Model {
             Msg::Register => {
                 let future = async move {
                     match register_user.validate() {
-                        Ok(_) => {
-                            match send_request("http://localhost:8088/register", &register_user, "POST")
-                                .await
-                            {
-                                Ok(user) => Msg::Registered(FetchState::Success(user)),
-                                Err(error) => Msg::Registered(FetchState::Failed(error)),
-                            }
-                        }
+                        Ok(_) => match send_request::<RegisterUser, CurrentUser>("/register", &register_user, "POST").await {
+                            Ok(user) => Msg::Registered(FetchState::Success(user)),
+                            Err(error) => Msg::Registered(FetchState::Failed(error)),
+                        },
                         Err(error) => Msg::Registered(FetchState::Failed(FetchError {
                             err: JsValue::from(error.to_string()),
                         })),
@@ -87,9 +83,10 @@ impl Component for Model {
             Msg::Registered(fetch_state) => {
                 match fetch_state {
                     FetchState::Success(_) => {
+                        self.router
+                            .send(RouteRequest::ReplaceRoute(Route::from(AppRoute::Index)));
                         ConsoleService::new().log("Success");
-                        self.router.send(RouteRequest::ReplaceRoute(Route::from(AppRoute::Index)));
-                    },
+                    }
                     FetchState::Failed(error) => ConsoleService::new().log(&error.to_string()),
                     FetchState::Fetching => ConsoleService::new().log("Fetching"),
                 };
@@ -100,16 +97,18 @@ impl Component for Model {
                     FormField::Email => self.register_user.email = value,
                     FormField::Company => self.register_user.company = value,
                     FormField::Password => self.register_user.password = value,
-                    FormField::PasswordConfirmation => self.register_user.password_confirmation = value,
+                    FormField::PasswordConfirmation => {
+                        self.register_user.password_confirmation = value
+                    }
                 };
                 true
-            },
-            Msg::NoOp => true
+            }
+            Msg::NoOp => true,
         }
     }
 
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        true
+        false
     }
 
     fn view(&self) -> VNode {
@@ -161,4 +160,3 @@ impl Component for Model {
         }
     }
 }
-

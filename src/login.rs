@@ -1,17 +1,19 @@
 use crate::fetching::{send_future, send_request, FetchError, FetchState};
 use crate::routing::AppRoute;
+use crate::CurrentUser;
 use serde_derive::{Deserialize, Serialize};
 use validator::Validate;
 use wasm_bindgen::prelude::JsValue;
+use yew::agent::{Bridge, Bridged};
 use yew::prelude::{html, Component, ComponentLink, InputData, ShouldRender};
 use yew::services::ConsoleService;
 use yew::virtual_dom::VNode;
-use yew_router::prelude::RouterAnchor;
+use yew_router::{agent::RouteAgent, agent::RouteRequest, prelude::RouterAnchor, route::Route};
 
-#[derive(Clone)]
 pub struct Model {
     link: ComponentLink<Self>,
     login_user: LoginUser,
+    router: Box<dyn Bridge<RouteAgent>>,
 }
 
 #[derive(Serialize, Validate, Deserialize, Clone)]
@@ -33,6 +35,7 @@ pub enum Msg {
     Logout,
     Logged(FetchState<JsValue>),
     UpdateForm(String, FormField),
+    NoOp,
 }
 
 impl Component for Model {
@@ -40,12 +43,16 @@ impl Component for Model {
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let callback = link.callback(|_| Msg::NoOp);
+        let router = RouteAgent::bridge(callback);
+
         Self {
             link,
             login_user: LoginUser {
                 email: "".to_string(),
                 password: "".to_string(),
             },
+            router,
         }
     }
 
@@ -55,30 +62,29 @@ impl Component for Model {
             Msg::Login => {
                 let future = async move {
                     match login_user.validate() {
-                        Ok(_) => {
-                            match send_request("http://localhost:8088/login", &login_user, "POST")
-                                .await
-                            {
-                                Ok(user) => Msg::Logged(FetchState::Success(user)),
-                                Err(error) => Msg::Logged(FetchState::Failed(error)),
-                            }
-                        }
+                        Ok(_) => match send_request::<LoginUser, CurrentUser>("/login", &login_user, "POST").await {
+                            Ok(user) => Msg::Logged(FetchState::Success(user)),
+                            Err(error) => Msg::Logged(FetchState::Failed(error)),
+                        },
                         Err(error) => Msg::Logged(FetchState::Failed(FetchError {
                             err: JsValue::from(error.to_string()),
                         })),
                     }
                 };
                 send_future(self.link.clone(), future);
-                self.link.send_message(Msg::Logged(FetchState::Fetching));
-                false
+                true
             }
             Msg::Logout => false,
             Msg::Logged(fetch_state) => {
                 match fetch_state {
-                    FetchState::Success(_) => ConsoleService::new().log("Success"),
-                    FetchState::Failed(error) =>{
+                    FetchState::Success(_) => {
+                        self.router
+                            .send(RouteRequest::ReplaceRoute(Route::from(AppRoute::Index)));
+                        ConsoleService::new().log("Success")
+                    }
+                    FetchState::Failed(error) => {
                         ConsoleService::new().log(&format!("Error: {}", &error.to_string()))
-                    },
+                    }
                     FetchState::Fetching => ConsoleService::new().log("Fetching"),
                 };
                 true
@@ -90,6 +96,7 @@ impl Component for Model {
                 };
                 true
             }
+            Msg::NoOp => true,
         }
     }
 
@@ -106,6 +113,7 @@ impl Component for Model {
                     <input name="email"
                         type="text"
                         class="form-control"
+                        placeholder="email"
                         oninput=self.link.callback(|e: InputData|
                             Msg::UpdateForm(e.value, FormField::Email)
                         )/>
@@ -114,6 +122,7 @@ impl Component for Model {
                 <input name="password"
                        type="password"
                        class="form-control"
+                        placeholder="password"
                        oninput=self.link.callback(|e: InputData|
                            Msg::UpdateForm(e.value, FormField::Password)
                        )/>
