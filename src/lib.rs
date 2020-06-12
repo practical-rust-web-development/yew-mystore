@@ -45,7 +45,7 @@ impl Component for Model {
     }
 
     fn change(&mut self, _: Self::Properties) -> ShouldRender {
-        false
+        true
     }
 
     fn view(&self) -> VNode {
@@ -55,7 +55,7 @@ impl Component for Model {
                   render = Router::render(|switch: AppRoute| {
                       match switch {
                         AppRoute::Login => html!{ <Login />},
-                        AppRoute::Register => html!{ <Register /> },
+                        AppRoute::Register => html! { <Register /> },
                         AppRoute::Index => html!{
                             <div>
                                 <nav class="menu",>

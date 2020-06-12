@@ -70,16 +70,18 @@ impl Component for Model {
                 };
                 send_future(self.link.clone(), future);
                 self.link.send_message(Msg::Logged(FetchState::Fetching));
-                true
+                false
             }
             Msg::Logout => false,
             Msg::Logged(fetch_state) => {
                 match fetch_state {
-                    FetchState::Success(_) => ConsoleService::new().log("success"),
-                    FetchState::Failed(error) => ConsoleService::new().log(&error.to_string()),
+                    FetchState::Success(_) => ConsoleService::new().log("Success"),
+                    FetchState::Failed(error) =>{
+                        ConsoleService::new().log(&format!("Error: {}", &error.to_string()))
+                    },
                     FetchState::Fetching => ConsoleService::new().log("Fetching"),
                 };
-                false
+                true
             }
             Msg::UpdateForm(value, form_field) => {
                 match form_field {
@@ -97,7 +99,7 @@ impl Component for Model {
 
     fn view(&self) -> VNode {
         html! {
-            <form class="col-lg-6 text-center border mx-auto p-5">
+            <div class="col-lg-6 text-center border mx-auto p-5">
                 <p class="h4 mb-4"> { "LogIn" }</p>
 
                 <div class="form-row mb-4">
@@ -121,7 +123,7 @@ impl Component for Model {
 
                 <hr />
                 <RouterAnchor<AppRoute> route=AppRoute::Index> {"Home"} </RouterAnchor<AppRoute>>
-            </form>
+            </div>
         }
     }
 }

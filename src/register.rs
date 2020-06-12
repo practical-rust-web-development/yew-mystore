@@ -6,12 +6,14 @@ use wasm_bindgen::prelude::JsValue;
 use yew::prelude::{html, Component, ComponentLink, InputData, ShouldRender};
 use yew::services::ConsoleService;
 use yew::virtual_dom::VNode;
-use yew_router::prelude::RouterAnchor;
+use yew_router::{prelude::*, route::Route, agent::RouteAgent, agent::RouteRequest};
+use yew::agent::Bridged;
+use yew::agent::Bridge;
 
-#[derive(Clone)]
 pub struct Model {
     link: ComponentLink<Self>,
     register_user: RegisterUser,
+    router: Box<dyn Bridge<RouteAgent>>,
 }
 
 #[derive(Serialize, Validate, Deserialize, Clone)]
@@ -37,6 +39,7 @@ pub enum Msg {
     Register,
     Registered(FetchState<JsValue>),
     UpdateForm(String, FormField),
+    NoOp
 }
 
 impl Component for Model {
@@ -44,6 +47,9 @@ impl Component for Model {
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let callback = link.callback(|_| Msg::NoOp);
+        let router = RouteAgent::bridge(callback);
+
         Self {
             link,
             register_user: RegisterUser {
@@ -52,6 +58,7 @@ impl Component for Model {
                 password: "".to_string(),
                 password_confirmation: "".to_string(),
             },
+            router
         }
     }
 
@@ -75,16 +82,18 @@ impl Component for Model {
                     }
                 };
                 send_future(self.link.clone(), future);
-                self.link.send_message(Msg::Registered(FetchState::Fetching));
                 true
             }
             Msg::Registered(fetch_state) => {
                 match fetch_state {
-                    FetchState::Success(_) => ConsoleService::new().log("success"),
+                    FetchState::Success(_) => {
+                        ConsoleService::new().log("Success");
+                        self.router.send(RouteRequest::ReplaceRoute(Route::from(AppRoute::Index)));
+                    },
                     FetchState::Failed(error) => ConsoleService::new().log(&error.to_string()),
                     FetchState::Fetching => ConsoleService::new().log("Fetching"),
                 };
-                false
+                true
             }
             Msg::UpdateForm(value, form_field) => {
                 match form_field {
@@ -94,17 +103,18 @@ impl Component for Model {
                     FormField::PasswordConfirmation => self.register_user.password_confirmation = value,
                 };
                 true
-            }
+            },
+            Msg::NoOp => true
         }
     }
 
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        false
+        true
     }
 
     fn view(&self) -> VNode {
         html! {
-            <form class="col-lg-6 text-center border mx-auto p-5">
+            <div class="col-lg-6 text-center border mx-auto p-5">
                 <p class="h4 mb-4"> { "Sign Up" }</p>
                 <div class="form-row mb-4">
                     <input name="email"
@@ -147,7 +157,7 @@ impl Component for Model {
 
                 <hr />
                 <RouterAnchor<AppRoute> route=AppRoute::Index> {"Home"} </RouterAnchor<AppRoute>>
-            </form>
+            </div>
         }
     }
 }
