@@ -55,13 +55,29 @@ impl Component for Model {
                         AppRoute::Register => html! { <Register /> },
                         AppRoute::Index => html!{
                             <div>
-                                <nav class="menu",>
+                                <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                                    <a class="navbar-brand" href="#">
+                                        <i class="fas fa-store"></i>
+                                        {"My Store"}
+                                    </a>
                                     <RouterAnchor<AppRoute> route=AppRoute::Login> {"Login"} </RouterAnchor<AppRoute>>
                                 </nav>
-                                <nav class="menu",>
-                                    <RouterAnchor<AppRoute> route=AppRoute::Register> {"Sign Up"} </RouterAnchor<AppRoute>>
-                                </nav>
-                                <h1>{ "My Store" }</h1>
+                                <div class="row">
+                                    <div class="mx-auto">
+                                        <RouterAnchor<AppRoute> route=AppRoute::Register>
+                                            <button class="btn btn-success" >
+                                                {"Sign Up"} 
+                                            </button>
+                                         </RouterAnchor<AppRoute>>
+                                    </div>
+                                </div>
+                                <hr />
+                                <div class="row">
+                                    <div class="mx-auto">
+                                        <i class="fas fa-store fa-10x text-center"></i>
+                                        <h2 class="text-center">{ "My Store" }</h2>
+                                    </div>
+                                </div>
                             </div>
                         },
                         AppRoute::PageNotFound(Permissive(None)) => html!{"Page not found"},
