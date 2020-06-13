@@ -29,13 +29,8 @@ pub struct CurrentUser {
 
 pub struct Model {}
 
-pub enum Msg {
-    RouteChanged(Route<()>),
-    ChangeRoute(AppRoute),
-}
-
 impl Component for Model {
-    type Message = Msg;
+    type Message = ();
     type Properties = ();
 
     fn create(_: Self::Properties, _link: ComponentLink<Self>) -> Self {
@@ -43,11 +38,11 @@ impl Component for Model {
     }
 
     fn update(&mut self, _msg: Self::Message) -> ShouldRender {
-        true
+        false
     }
 
     fn change(&mut self, _: Self::Properties) -> ShouldRender {
-        true
+        false
     }
 
     fn view(&self) -> VNode {
@@ -84,5 +79,5 @@ impl Component for Model {
 
 #[wasm_bindgen(start)]
 pub fn run_app() {
-    App::<Model>::new().mount_to_body();
+    yew::start_app::<Model>();
 }

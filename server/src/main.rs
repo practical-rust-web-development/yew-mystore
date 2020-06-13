@@ -1,17 +1,7 @@
 use actix_files::NamedFile;
-use actix_web::{get, middleware, web, App, Error, HttpResponse, HttpServer};
+use actix_web::{middleware, web, App, Error, HttpServer};
 
 const ASSETS_DIR: &str = "../static";
-
-#[get("/api")]
-async fn api_404() -> HttpResponse {
-    HttpResponse::NotFound().finish()
-}
-
-#[get("/api/{unconfigured_routes:.*}")]
-async fn api_404_unconfigured() -> HttpResponse {
-    HttpResponse::NotFound().finish()
-}
 
 async fn serve_index_html() -> Result<NamedFile, Error> {
     const INDEX_HTML: &str = "index.html";
@@ -32,8 +22,6 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .wrap(middleware::Logger::default())
-            .service(api_404)
-            .service(api_404_unconfigured)
             .service(actix_files::Files::new("/", ASSETS_DIR).index_file("index.html"))
             .default_service(web::get().to(serve_index_html))
     })
