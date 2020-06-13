@@ -7,6 +7,8 @@ pub enum AppRoute {
     Register,
     #[to = "/login"]
     Login,
+    #[to = "/dashboard"]
+    Dashboard,
     #[to = "/"]
     Index,
     #[to = "/page-not-found"]

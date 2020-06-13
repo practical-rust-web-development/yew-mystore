@@ -32,7 +32,6 @@ pub enum FormField {
 
 pub enum Msg {
     Login,
-    Logout,
     Logged(FetchState<JsValue>),
     UpdateForm(String, FormField),
     NoOp,
@@ -74,7 +73,6 @@ impl Component for Model {
                 send_future(self.link.clone(), future);
                 true
             }
-            Msg::Logout => false,
             Msg::Logged(fetch_state) => {
                 match fetch_state {
                     FetchState::Success(_) => {

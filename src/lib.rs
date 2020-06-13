@@ -8,16 +8,18 @@ mod fetching;
 mod login;
 mod routing;
 mod register;
+mod index;
 
 use login::Model as Login;
 use register::Model as Register;
+use index::Model as Index;
 use routing::AppRoute;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 use yew::prelude::*;
 use yew::virtual_dom::VNode;
 use yew_router::switch::Permissive;
-use yew_router::{prelude::Router, prelude::RouterAnchor, route::Route};
+use yew_router::{prelude::Router, route::Route};
 
 #[derive(Serialize, Deserialize)]
 pub struct CurrentUser {
@@ -53,31 +55,10 @@ impl Component for Model {
                       match switch {
                         AppRoute::Login => html!{ <Login />},
                         AppRoute::Register => html! { <Register /> },
-                        AppRoute::Index => html!{
+                        AppRoute::Index => html!{ <Index /> },
+                        AppRoute::Dashboard => html!{
                             <div>
-                                <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                                    <a class="navbar-brand" href="#">
-                                        <i class="fas fa-store"></i>
-                                        {"My Store"}
-                                    </a>
-                                    <RouterAnchor<AppRoute> route=AppRoute::Login> {"Login"} </RouterAnchor<AppRoute>>
-                                </nav>
-                                <div class="row">
-                                    <div class="mx-auto">
-                                        <RouterAnchor<AppRoute> route=AppRoute::Register>
-                                            <button class="btn btn-success" >
-                                                {"Sign Up"} 
-                                            </button>
-                                         </RouterAnchor<AppRoute>>
-                                    </div>
-                                </div>
-                                <hr />
-                                <div class="row">
-                                    <div class="mx-auto">
-                                        <i class="fas fa-store fa-10x text-center"></i>
-                                        <h2 class="text-center">{ "My Store" }</h2>
-                                    </div>
-                                </div>
+                            <h1> { "Dashboard" } </h1>
                             </div>
                         },
                         AppRoute::PageNotFound(Permissive(None)) => html!{"Page not found"},
