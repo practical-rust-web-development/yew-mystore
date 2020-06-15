@@ -9,10 +9,12 @@ mod login;
 mod routing;
 mod register;
 mod index;
+mod dashboard;
 
 use login::Model as Login;
 use register::Model as Register;
 use index::Model as Index;
+use dashboard::Model as Dashboard;
 use routing::AppRoute;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
@@ -56,11 +58,7 @@ impl Component for Model {
                         AppRoute::Login => html!{ <Login />},
                         AppRoute::Register => html! { <Register /> },
                         AppRoute::Index => html!{ <Index /> },
-                        AppRoute::Dashboard => html!{
-                            <div>
-                            <h1> { "Dashboard" } </h1>
-                            </div>
-                        },
+                        AppRoute::Dashboard => html!{ <Dashboard /> },
                         AppRoute::PageNotFound(Permissive(None)) => html!{"Page not found"},
                         AppRoute::PageNotFound(Permissive(Some(missed_route))) => html!{format!("Page '{}' not found", missed_route)}
                       }

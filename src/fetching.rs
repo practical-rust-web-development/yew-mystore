@@ -43,7 +43,7 @@ where
 
 pub async fn send_request<'a, T, R>(
     url: &'a str,
-    data: &T,
+    data: Option<&T>,
     method: &str,
 ) -> Result<JsValue, FetchError>
 where
@@ -53,8 +53,10 @@ where
     let mut opts = RequestInit::new();
     opts.method(method);
     opts.mode(RequestMode::Cors);
-    if let Ok(data_str) = serde_json::to_string(&data) {
-        opts.body(Some(&JsValue::from_str(&data_str)));
+    if let Some(maybe_data) = data {
+        if let Ok(data_str) = serde_json::to_string(&maybe_data) {
+            opts.body(Some(&JsValue::from_str(&data_str)));
+        }
     }
 
     let base_url = "http://localhost:8088";

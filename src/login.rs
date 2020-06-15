@@ -61,7 +61,7 @@ impl Component for Model {
             Msg::Login => {
                 let future = async move {
                     match login_user.validate() {
-                        Ok(_) => match send_request::<LoginUser, CurrentUser>("/login", &login_user, "POST").await {
+                        Ok(_) => match send_request::<LoginUser, CurrentUser>("/login", Some(&login_user), "POST").await {
                             Ok(user) => Msg::Logged(FetchState::Success(user)),
                             Err(error) => Msg::Logged(FetchState::Failed(error)),
                         },
@@ -77,7 +77,7 @@ impl Component for Model {
                 match fetch_state {
                     FetchState::Success(_) => {
                         self.router
-                            .send(RouteRequest::ReplaceRoute(Route::from(AppRoute::Index)));
+                            .send(RouteRequest::ReplaceRoute(Route::from(AppRoute::Dashboard)));
                         ConsoleService::new().log("Success")
                     }
                     FetchState::Failed(error) => {

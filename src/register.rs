@@ -68,7 +68,7 @@ impl Component for Model {
             Msg::Register => {
                 let future = async move {
                     match register_user.validate() {
-                        Ok(_) => match send_request::<RegisterUser, CurrentUser>("/register", &register_user, "POST").await {
+                        Ok(_) => match send_request::<RegisterUser, CurrentUser>("/register", Some(&register_user), "POST").await {
                             Ok(user) => Msg::Registered(FetchState::Success(user)),
                             Err(error) => Msg::Registered(FetchState::Failed(error)),
                         },
