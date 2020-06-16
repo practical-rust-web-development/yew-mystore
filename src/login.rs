@@ -1,4 +1,6 @@
-use crate::fetching::{send_future, send_request, FetchError, FetchState};
+use crate::fetching::{
+    save_token, send_future, send_request, FetchError, FetchResponse, FetchState,
+};
 use crate::routing::AppRoute;
 use crate::CurrentUser;
 use serde_derive::{Deserialize, Serialize};
@@ -6,6 +8,7 @@ use validator::Validate;
 use wasm_bindgen::prelude::JsValue;
 use yew::agent::{Bridge, Bridged};
 use yew::prelude::{html, Component, ComponentLink, InputData, ShouldRender};
+use yew::services::storage::{Area, StorageService};
 use yew::services::ConsoleService;
 use yew::virtual_dom::VNode;
 use yew_router::{agent::RouteAgent, agent::RouteRequest, prelude::RouterAnchor, route::Route};
@@ -32,7 +35,7 @@ pub enum FormField {
 
 pub enum Msg {
     Login,
-    Logged(FetchState<JsValue>),
+    Logged(FetchState<FetchResponse<JsValue>>),
     UpdateForm(String, FormField),
     NoOp,
 }
@@ -44,6 +47,7 @@ impl Component for Model {
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         let callback = link.callback(|_| Msg::NoOp);
         let router = RouteAgent::bridge(callback);
+        let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
 
         Self {
             link,
@@ -61,8 +65,14 @@ impl Component for Model {
             Msg::Login => {
                 let future = async move {
                     match login_user.validate() {
-                        Ok(_) => match send_request::<LoginUser, CurrentUser>("/login", Some(&login_user), "POST").await {
-                            Ok(user) => Msg::Logged(FetchState::Success(user)),
+                        Ok(_) => match send_request::<LoginUser, CurrentUser>(
+                            "/login",
+                            Some(&login_user),
+                            "POST",
+                        )
+                        .await
+                        {
+                            Ok(response) => Msg::Logged(FetchState::Success(response)),
                             Err(error) => Msg::Logged(FetchState::Failed(error)),
                         },
                         Err(error) => Msg::Logged(FetchState::Failed(FetchError {
@@ -75,7 +85,8 @@ impl Component for Model {
             }
             Msg::Logged(fetch_state) => {
                 match fetch_state {
-                    FetchState::Success(_) => {
+                    FetchState::Success(response) => {
+                        save_token(response.headers);
                         self.router
                             .send(RouteRequest::ReplaceRoute(Route::from(AppRoute::Dashboard)));
                         ConsoleService::new().log("Success")

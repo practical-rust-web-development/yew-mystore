@@ -1,6 +1,6 @@
 use crate::routing::AppRoute;
 
-use crate::fetching::{send_future, send_request, FetchState};
+use crate::fetching::{send_future, send_request, delete_token, FetchState};
 use wasm_bindgen::prelude::JsValue;
 use yew::agent::{Bridge, Bridged};
 use yew::prelude::{html, Component, ComponentLink, ShouldRender};
@@ -35,10 +35,13 @@ impl Component for Model {
             Msg::Logout => {
                 let future = async move {
                     match send_request::<Option<String>, String>("/logout", None, "DELETE").await {
-                        Ok(user) => Msg::LoggedOut(FetchState::Success(user)),
+                        Ok(response) => Msg::LoggedOut(FetchState::Success(response.data)),
                         Err(error) => Msg::LoggedOut(FetchState::Failed(error)),
                     }
                 };
+                if let Err(error) = delete_token() {
+                    ConsoleService::new().log(&format!("Error: {}", &error));
+                }
                 send_future(self.link.clone(), future);
                 true
             }
