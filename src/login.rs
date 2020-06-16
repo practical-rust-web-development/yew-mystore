@@ -47,7 +47,6 @@ impl Component for Model {
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         let callback = link.callback(|_| Msg::NoOp);
         let router = RouteAgent::bridge(callback);
-        let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
 
         Self {
             link,
