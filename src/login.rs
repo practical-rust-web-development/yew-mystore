@@ -6,9 +6,8 @@ use crate::CurrentUser;
 use serde_derive::{Deserialize, Serialize};
 use validator::Validate;
 use wasm_bindgen::prelude::JsValue;
-use yew::agent::{Bridge, Bridged};
+use yew::agent::{Dispatched, Dispatcher};
 use yew::prelude::{html, Component, ComponentLink, InputData, ShouldRender};
-use yew::services::storage::{Area, StorageService};
 use yew::services::ConsoleService;
 use yew::virtual_dom::VNode;
 use yew_router::{agent::RouteAgent, agent::RouteRequest, prelude::RouterAnchor, route::Route};
@@ -16,7 +15,7 @@ use yew_router::{agent::RouteAgent, agent::RouteRequest, prelude::RouterAnchor, 
 pub struct Model {
     link: ComponentLink<Self>,
     login_user: LoginUser,
-    router: Box<dyn Bridge<RouteAgent>>,
+    router: Dispatcher<RouteAgent>,
 }
 
 #[derive(Serialize, Validate, Deserialize, Clone)]
@@ -37,7 +36,6 @@ pub enum Msg {
     Login,
     Logged(FetchState<FetchResponse<JsValue>>),
     UpdateForm(String, FormField),
-    NoOp,
 }
 
 impl Component for Model {
@@ -45,8 +43,7 @@ impl Component for Model {
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let callback = link.callback(|_| Msg::NoOp);
-        let router = RouteAgent::bridge(callback);
+        let router = RouteAgent::dispatcher();
 
         Self {
             link,
@@ -106,7 +103,6 @@ impl Component for Model {
                 };
                 true
             }
-            Msg::NoOp => true,
         }
     }
 
