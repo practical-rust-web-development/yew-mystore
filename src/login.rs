@@ -86,7 +86,9 @@ impl Component for Model {
             Msg::Logged(fetch_state) => {
                 match fetch_state {
                     FetchState::Success(response) => {
-                        save_token(response.headers);
+                        if let Err(_) = save_token(response.headers) {
+                            ConsoleService::new().log("Error saving token!");
+                        }
                         self.router
                             .send(RouteRequest::ReplaceRoute(Route::from(AppRoute::Dashboard)));
                         ConsoleService::new().log("Success")
