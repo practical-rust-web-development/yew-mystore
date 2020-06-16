@@ -1,21 +1,19 @@
 use crate::fetching::{
     save_token, send_future, send_request, FetchError, FetchResponse, FetchState,
 };
-use crate::routing::AppRoute;
+use crate::routing::{AppRoute, Redirecter};
 use crate::CurrentUser;
 use serde_derive::{Deserialize, Serialize};
 use validator::Validate;
 use wasm_bindgen::prelude::JsValue;
-use yew::agent::{Dispatched, Dispatcher};
 use yew::prelude::{html, Component, ComponentLink, InputData, ShouldRender};
 use yew::services::ConsoleService;
 use yew::virtual_dom::VNode;
-use yew_router::{agent::RouteAgent, agent::RouteRequest, prelude::RouterAnchor, route::Route};
+use yew_router::prelude::RouterAnchor;
 
 pub struct Model {
     link: ComponentLink<Self>,
     login_user: LoginUser,
-    router: Dispatcher<RouteAgent>,
 }
 
 #[derive(Serialize, Validate, Deserialize, Clone)]
@@ -43,15 +41,12 @@ impl Component for Model {
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let router = RouteAgent::dispatcher();
-
         Self {
             link,
             login_user: LoginUser {
                 email: "".to_string(),
                 password: "".to_string(),
             },
-            router,
         }
     }
 
@@ -85,8 +80,8 @@ impl Component for Model {
                         if let Err(_) = save_token(response.headers) {
                             ConsoleService::new().log("Error saving token!");
                         }
-                        self.router
-                            .send(RouteRequest::ReplaceRoute(Route::from(AppRoute::Dashboard)));
+                        let mut redirecter = Redirecter::new();
+                        redirecter.redirect(AppRoute::Dashboard);
                         ConsoleService::new().log("Success")
                     }
                     FetchState::Failed(error) => {
