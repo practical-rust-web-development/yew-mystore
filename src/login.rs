@@ -1,8 +1,3 @@
-use crate::fetching::{
-    save_token, send_future, send_request, FetchError, FetchResponse, FetchState,
-};
-use crate::routing::{AppRoute, Redirecter};
-use crate::CurrentUser;
 use serde_derive::{Deserialize, Serialize};
 use validator::Validate;
 use wasm_bindgen::prelude::JsValue;
@@ -10,6 +5,12 @@ use yew::prelude::{html, Component, ComponentLink, InputData, ShouldRender};
 use yew::services::ConsoleService;
 use yew::virtual_dom::VNode;
 use yew_router::prelude::RouterAnchor;
+
+use crate::fetching::{
+    save_token, send_future, send_request, FetchError, FetchResponse, FetchState,
+};
+use crate::routing::{AppRoute, Redirecter};
+use crate::CurrentUser;
 
 pub struct Model {
     link: ComponentLink<Self>,

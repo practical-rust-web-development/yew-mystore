@@ -1,22 +1,18 @@
-use crate::routing::AppRoute;
-
-use crate::fetching::{send_future, send_request, delete_token, FetchState};
 use wasm_bindgen::prelude::JsValue;
-use yew::agent::{Bridge, Bridged};
 use yew::prelude::{html, Component, ComponentLink, ShouldRender};
 use yew::services::ConsoleService;
 use yew::virtual_dom::VNode;
-use yew_router::{agent::RouteAgent, agent::RouteRequest, route::Route};
+
+use crate::routing::{AppRoute, Redirecter};
+use crate::fetching::{send_future, send_request, delete_token, FetchState};
 
 pub struct Model {
     link: ComponentLink<Self>,
-    router: Box<dyn Bridge<RouteAgent>>,
 }
 
 pub enum Msg {
     Logout,
     LoggedOut(FetchState<JsValue>),
-    NoOp,
 }
 
 impl Component for Model {
@@ -24,10 +20,7 @@ impl Component for Model {
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let callback = link.callback(|_| Msg::NoOp);
-        let router = RouteAgent::bridge(callback);
-
-        Self { link, router }
+        Self { link }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
@@ -48,8 +41,8 @@ impl Component for Model {
             Msg::LoggedOut(fetch_state) => {
                 match fetch_state {
                     FetchState::Success(_) => {
-                        self.router
-                            .send(RouteRequest::ReplaceRoute(Route::from(AppRoute::Index)));
+                        let mut redirecter = Redirecter::new();
+                        redirecter.redirect(AppRoute::Login);
                         ConsoleService::new().log("Success")
                     }
                     FetchState::Failed(error) => {
@@ -59,7 +52,6 @@ impl Component for Model {
                 };
                 true
             }
-            Msg::NoOp => true,
         }
     }
 

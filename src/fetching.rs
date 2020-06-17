@@ -7,6 +7,9 @@ use wasm_bindgen_futures::spawn_local;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Headers, Request, RequestInit, RequestMode, Response};
 use yew::prelude::{Component, ComponentLink};
+use yew::services::ConsoleService;
+
+use crate::routing::{AppRoute, Redirecter};
 
 const TOKEN_KEY: &str = "mystore.key";
 
@@ -86,7 +89,9 @@ where
 
     let headers = resp.headers();
     if let Err(_) = validate_token(&headers) {
-        //Redirect
+        let mut redirecter = Redirecter::new();
+        redirecter.redirect(AppRoute::Login);
+        ConsoleService::new().log("Redirecting!")
     }
 
     let json = JsFuture::from(resp.json()?).await?;
