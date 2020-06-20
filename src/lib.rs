@@ -10,6 +10,7 @@ mod routing;
 mod register;
 mod index;
 mod dashboard;
+mod graphql;
 
 use login::Model as Login;
 use register::Model as Register;

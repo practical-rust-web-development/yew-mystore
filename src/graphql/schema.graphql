@@ -1,0 +1,211 @@
+"""
+Direct the client to resolve this field locally, either from the cache or local resolvers.
+"""
+directive @client(
+  """
+  When true, the client will never use the cache for this value. See
+  https://www.apollographql.com/docs/react/essentials/local-state/#forcing-resolvers-with-clientalways-true
+  """
+  always: Boolean
+) on FIELD | FRAGMENT_DEFINITION | INLINE_FRAGMENT
+
+"""
+Export this locally resolved field as a variable to be used in the remainder of this query. See
+https://www.apollographql.com/docs/react/essentials/local-state/#using-client-fields-as-variables
+"""
+directive @export(
+  """The variable name to export this field as."""
+  as: String!
+) on FIELD
+
+"""
+Specify a custom store key for this result. See
+https://www.apollographql.com/docs/react/advanced/caching/#the-connection-directive
+"""
+directive @connection(
+  """Specify the store key."""
+  key: String!
+
+  """
+  An array of query argument names to include in the generated custom store key.
+  """
+  filter: [String!]
+) on FIELD
+
+input FormPrice {
+  id: Int
+  name: String
+  userId: Int
+}
+
+input FormPriceProduct {
+  id: Int
+  priceId: Int!
+  productId: Int
+  userId: Int
+  amount: Int
+}
+
+input FormPriceProductsToUpdate {
+  data: [PriceProductToUpdate!]!
+}
+
+input FormProduct {
+  id: Int
+  name: String
+  stock: Float
+  cost: Int
+  description: String
+  userId: Int
+}
+
+"""Sale Bill"""
+input FormSale {
+  id: Int
+  saleDate: NaiveDate
+  userId: Int
+  total: Float
+  billNumber: String
+  state: SaleState
+}
+
+"""Relationship between sale and products"""
+input FormSaleProduct {
+  id: Int
+  productId: Int
+  saleId: Int
+  amount: Float
+  discount: Int
+  tax: Int
+  price: Int
+  total: Float
+}
+
+input FormSaleProducts {
+  data: [FullFormSaleProduct!]!
+}
+
+input FullFormSaleProduct {
+  saleProduct: FormSaleProduct!
+  product: FormProduct!
+}
+
+type FullPriceProduct {
+  priceProduct: PriceProduct!
+  price: Price!
+}
+
+type FullProduct {
+  product: Product!
+  priceProducts: [FullPriceProduct!]!
+}
+
+type FullSale {
+  sale: Sale!
+  saleProducts: [FullSaleProduct!]!
+}
+
+type FullSaleProduct {
+  saleProduct: SaleProduct!
+  product: Product!
+}
+
+type ListPrice {
+  data: [Price!]!
+}
+
+type ListProduct {
+  data: [FullProduct!]!
+}
+
+type ListSale {
+  data: [FullSale!]!
+}
+
+type Mutation {
+  createSale(form: FormSale!, formSaleProducts: FormSaleProducts!): FullSale!
+  updateSale(form: FormSale!, formSaleProducts: FormSaleProducts!): FullSale!
+  approveSale(saleId: Int!): Boolean!
+  cancelSale(saleId: Int!): Boolean!
+  paySale(saleId: Int!): Boolean!
+  partiallyPaySale(saleId: Int!): Boolean!
+  destroySale(saleId: Int!): Boolean!
+  createProduct(form: FormProduct!, formPriceProducts: FormPriceProductsToUpdate!): FullProduct!
+  updateProduct(form: FormProduct!, formPriceProducts: FormPriceProductsToUpdate!): FullProduct!
+  destroyProduct(productId: Int!): Boolean!
+  createPrice(form: FormPrice!): Price!
+  updatePrice(form: FormPrice!): Price!
+  destroyPrice(priceId: Int!): Boolean!
+}
+
+"""NaiveDate"""
+scalar NaiveDate
+
+type Price {
+  id: Int!
+  name: String!
+  userId: Int!
+}
+
+type PriceProduct {
+  id: Int!
+  priceId: Int!
+  productId: Int!
+  userId: Int!
+  amount: Int
+}
+
+input PriceProductToUpdate {
+  priceProduct: FormPriceProduct!
+  toDelete: Boolean!
+}
+
+"""Product"""
+type Product {
+  id: Int!
+  name: String!
+  stock: Float!
+  cost: Int
+  description: String
+  userId: Int!
+}
+
+type Query {
+  dashboard: String!
+  listSale(search: FormSale, limit: Int!): ListSale!
+  showSale(saleId: Int!): FullSale!
+  listProduct(search: String!, limit: Int!, rank: Float!): ListProduct!
+  showProduct(productId: Int!): FullProduct!
+  ListPrice: ListPrice!
+  findPrice(priceId: Int!): Price!
+}
+
+"""Sale Bill"""
+type Sale {
+  id: Int!
+  userId: Int!
+  saleDate: NaiveDate!
+  total: Float!
+  billNumber: String
+  state: SaleState!
+}
+
+"""Relationship between sale and products"""
+type SaleProduct {
+  id: Int!
+  productId: Int!
+  saleId: Int!
+  amount: Float!
+  discount: Int!
+  tax: Int!
+  price: Int!
+  total: Float!
+}
+
+enum SaleState {
+  DRAFT
+  APPROVED
+  PARTIALLY_PAYED
+  PAYED
+  CANCELLED
+}
