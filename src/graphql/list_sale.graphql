@@ -1,7 +1,3 @@
-query Dashboard {
-  dashboard
-}
-
 query ListSale($search:FormSale, $limit:Int!) {
     listSale(search: $search, limit: $limit) {
         data {

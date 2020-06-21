@@ -28,6 +28,8 @@ features = [
   'RequestInit',
   'RequestMode',
   'Response',
+  'RequestCredentials',
+  'HtmlDocument',
   'Window'
 ]
 

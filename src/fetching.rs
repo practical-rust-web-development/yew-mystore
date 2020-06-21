@@ -1,11 +1,14 @@
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use std::fmt::{Error as FmtError, Formatter};
 use std::future::Future;
 use wasm_bindgen::prelude::JsValue;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{Headers, Request, RequestInit, RequestMode, Response};
+use web_sys::{
+    Headers, HtmlDocument, Request, RequestCredentials, RequestInit, RequestMode, Response,
+};
 use yew::prelude::{Component, ComponentLink};
 use yew::services::ConsoleService;
 
@@ -71,6 +74,7 @@ where
     let mut opts = RequestInit::new();
     opts.method(method);
     opts.mode(RequestMode::Cors);
+    opts.credentials(RequestCredentials::SameOrigin);
     if let Some(maybe_data) = data {
         if let Ok(data_str) = serde_json::to_string(&maybe_data) {
             opts.body(Some(&JsValue::from_str(&data_str)));
@@ -81,6 +85,12 @@ where
 
     let request = Request::new_with_str_and_init(&format!("{}{}", base_url, url), &opts)?;
     request.headers().set("Content-Type", "application/json")?;
+    if let Ok(token) = get_token() {
+        request.headers().set("x-csrf-token", &token)?;
+    }
+    if let Ok(cookie) = get_cookie() {
+        request.headers().set("x-csrf-token", &token)?;
+    }
 
     let window =
         web_sys::window().ok_or_else(|| JsValue::from_str("Could not get a window object"))?;
@@ -166,4 +176,38 @@ fn store_token(token: String) -> Result<bool, FetchError> {
         storage.set_item(TOKEN_KEY, &token)?;
     }
     Ok(true)
+}
+
+pub fn get_cookie(headers: Headers) -> Result<bool, FetchError> {
+    let cookie = headers
+        .get("set-cookie")?
+        .ok_or_else(|| JsValue::from_str("Could not get token from Header"))?;
+    html_document()?.set_cookie(&cookie);
+    Ok(true)
+    //if let Ok(value) = serde_json::from_str::<Value>(&cookie) {
+    //    //let mystorejwt = value.get("mystorejwt").ok_or_else(|| FetchError {
+    //    //    err: JsValue::from_str("No mystorejwt"),
+    //    //})?;
+    //    //let cookie_value = mystorejwt.get("value").ok_or_else(|| FetchError {
+    //    //    err: JsValue::from_str("No cookie value"),
+    //    //})?;
+    //    //let cookie: String =
+    //    //    serde_json::from_value(cookie_value.clone()).map_err(|_error| FetchError {
+    //    //        err: JsValue::from_str("no cookie"),
+    //    //    })?;
+
+    //} else {
+    //    Err(FetchError {
+    //        err: JsValue::from_str("Can't parse cookie"),
+    //    })
+    //}
+}
+
+fn html_document() -> Result<HtmlDocument, FetchError> {
+    let window =
+        web_sys::window().ok_or_else(|| JsValue::from_str("Could not get a window object"))?;
+    let document = window
+        .document()
+        .ok_or_else(|| JsValue::from_str("Could not get a document object"))?;
+    Ok(wasm_bindgen::JsValue::from(document).unchecked_into::<web_sys::HtmlDocument>())
 }

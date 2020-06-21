@@ -8,7 +8,7 @@ use crate::fetching::{send_request, FetchError, FetchResponse};
 #[derive(GraphQLQuery, Serialize, Deserialize)]
 #[graphql(
     schema_path = "src/graphql/schema.graphql",
-    query_path = "src/graphql/query.graphql",
+    query_path = "src/graphql/dashboard.graphql",
     response_derives = "Debug"
 )]
 pub struct Dashboard;
@@ -16,7 +16,7 @@ pub struct Dashboard;
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/graphql/schema.graphql",
-    query_path = "src/graphql/query.graphql",
+    query_path = "src/graphql/list_sale.graphql",
     response_derives = "Debug"
 )]
 pub struct ListSale;
