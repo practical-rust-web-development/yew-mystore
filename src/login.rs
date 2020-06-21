@@ -7,7 +7,7 @@ use yew::virtual_dom::VNode;
 use yew_router::prelude::RouterAnchor;
 
 use crate::fetching::{
-    save_token, send_future, send_request, FetchError, FetchResponse, FetchState,
+    save_token, send_future, send_request, FetchError, FetchResponse, FetchState, set_cookie,
 };
 use crate::routing::{AppRoute, Redirecter};
 use crate::CurrentUser;
@@ -78,8 +78,11 @@ impl Component for Model {
             Msg::Logged(fetch_state) => {
                 match fetch_state {
                     FetchState::Success(response) => {
-                        if let Err(_) = save_token(response.headers) {
+                        if let Err(_) = save_token(response.headers.clone()) {
                             ConsoleService::new().log("Error saving token!");
+                        }
+                        if let Err(_) = set_cookie(response.headers) {
+                            ConsoleService::new().log("Error saving cookie!");
                         }
                         let mut redirecter = Redirecter::new();
                         redirecter.redirect(AppRoute::Dashboard);

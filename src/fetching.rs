@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
 use std::fmt::{Error as FmtError, Formatter};
 use std::future::Future;
 use wasm_bindgen::prelude::JsValue;
@@ -88,9 +87,6 @@ where
     if let Ok(token) = get_token() {
         request.headers().set("x-csrf-token", &token)?;
     }
-    if let Ok(cookie) = get_cookie() {
-        request.headers().set("x-csrf-token", &token)?;
-    }
 
     let window =
         web_sys::window().ok_or_else(|| JsValue::from_str("Could not get a window object"))?;
@@ -138,6 +134,14 @@ pub fn delete_token() -> Result<bool, FetchError> {
     }
 }
 
+pub fn set_cookie(headers: Headers) -> Result<bool, FetchError> {
+    let cookie = headers
+        .get("set-cookie")?
+        .ok_or_else(|| JsValue::from_str("Could not get token from Header"))?;
+    html_document()?.set_cookie(&cookie)?;
+    Ok(true)
+}
+
 fn get_token() -> Result<String, FetchError> {
     let window =
         web_sys::window().ok_or_else(|| JsValue::from_str("Could not get a window object"))?;
@@ -176,31 +180,6 @@ fn store_token(token: String) -> Result<bool, FetchError> {
         storage.set_item(TOKEN_KEY, &token)?;
     }
     Ok(true)
-}
-
-pub fn get_cookie(headers: Headers) -> Result<bool, FetchError> {
-    let cookie = headers
-        .get("set-cookie")?
-        .ok_or_else(|| JsValue::from_str("Could not get token from Header"))?;
-    html_document()?.set_cookie(&cookie);
-    Ok(true)
-    //if let Ok(value) = serde_json::from_str::<Value>(&cookie) {
-    //    //let mystorejwt = value.get("mystorejwt").ok_or_else(|| FetchError {
-    //    //    err: JsValue::from_str("No mystorejwt"),
-    //    //})?;
-    //    //let cookie_value = mystorejwt.get("value").ok_or_else(|| FetchError {
-    //    //    err: JsValue::from_str("No cookie value"),
-    //    //})?;
-    //    //let cookie: String =
-    //    //    serde_json::from_value(cookie_value.clone()).map_err(|_error| FetchError {
-    //    //        err: JsValue::from_str("no cookie"),
-    //    //    })?;
-
-    //} else {
-    //    Err(FetchError {
-    //        err: JsValue::from_str("Can't parse cookie"),
-    //    })
-    //}
 }
 
 fn html_document() -> Result<HtmlDocument, FetchError> {
