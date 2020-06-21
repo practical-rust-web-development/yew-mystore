@@ -1,5 +1,5 @@
 use chrono::NaiveDate;
-use graphql_client::{GraphQLQuery, QueryBody};
+use graphql_client::GraphQLQuery;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::JsValue;
 
@@ -21,25 +21,6 @@ pub struct Dashboard;
 )]
 pub struct ListSale;
 
-//macro_rules! fetch_graphql {
-//    ($name: ident, $struct: ident, $variables: ident, $($element: ident: $ty: expr),*) => {
-//        paste::item! {
-//            pub async fn [<fetch_graphql_ $name>]() -> Result<FetchResponse<JsValue>, FetchError> {
-//                let request_body = $struct::build_query($variables { $($element: $ty),* });
-//
-//                send_request::<QueryBody<$name::Variables>, String>("/graphql", Some(&request_body), "POST")
-//                    .await
-//            }
-//        }
-//    };
-//}
-//
-//use dashboard::Variables as dashboard_variables;
-//use list_sale::Variables as sale_list_variables;
-//fetch_graphql!(dashboard, Dashboard, dashboard_variables,);
-//fetch_graphql!(list_sale, ListSale, sale_list_variables, search: Some("".to_string()), limit: 10);
-
-//let request_body = Dashboard::build_query(variables);
 pub async fn fetch_graphql<T, R>(request_body: T) -> Result<FetchResponse<JsValue>, FetchError>
 where
     T: Serialize,
